@@ -2,8 +2,7 @@ class Treegrid {
     constructor(container) {
         this._container = container;
         this._tbody = this._container.querySelector('tbody');
-        this._nodes = [];
-        this._sort();
+        this._nodes = this._getNodeList();
     }
 
     render() {
@@ -126,32 +125,21 @@ class Treegrid {
         return this._tbody.querySelectorAll(`tr[parent_id="${parentId}"]`);
     }
 
-    _sort() {
-        this._nodes = this._getNodeList();
-    }
-
-    _getNodeList() {
-        let trList = this._tbody.querySelectorAll('tr:not([parent_id]), tr[parent_id=""]')
+    _getNodeList(parentId, level) {
+        if (typeof parentId === 'undefined') parentId = null;
+        if (typeof level === 'undefined') level = 0; else level += 1;
+        let trList;
+        if (!parentId)
+            trList = this._tbody.querySelectorAll('tr:not([parent_id]), tr[parent_id=""]')
+        else
+            trList = this._getTrList(parentId);
         if (!trList)
             return []
         let nodes = [];
         for (let index = 0; index < trList.length; index++) {
             let tr = trList[index];
-            let children = this._getChildren(tr.id, 0);
-            let node = {id:tr.id, parent:null, tr:tr, level:0, children: children, status: (children.length == 0) ? '': 'expanded'}
-            nodes.push(node);
-        }
-        return nodes
-    }
-
-    _getChildren(parentId, level) {
-        let nodes = []
-        let trList = this._getTrList(parentId);
-        level += 1;
-        for (let index = 0; index < trList.length; index++) {
-            let tr = trList[index];
-            let children = this._getChildren(tr.id, level)
-            let node = {id:tr.id, parent: tr.getAttribute('parent_id'), level:level, children: children, status: (children.length == 0) ? '': 'expanded'}
+            let children = this._getNodeList(tr.id, level);
+            let node = {id:tr.id, parent:parentId, tr:tr, level:level, children: children, status: (children.length == 0) ? '': 'expanded'}
             nodes.push(node);
         }
         return nodes
